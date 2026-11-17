@@ -47,8 +47,8 @@ import Base from '../layouts/Base.astro';
       } catch (e) {
         out.textContent =
           `调用失败：${(e as Error).message}\n\n` +
-          '本地开发时接口不存在是正常的——functions/ 目录需要 wrangler 才会生效；\n' +
-          '线上要先在 Cloudflare 控制台设置环境变量（如 OPENAI_API_KEY）。';
+          '本地开发时接口不存在是正常的——/api/chat 由 worker/index.ts 提供，\n' +
+          '本地要测请用 npm run agent:dev；线上要先在 Cloudflare 控制台设置环境变量（如 OPENAI_API_KEY）。';
       }
     }
 

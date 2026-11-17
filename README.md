@@ -1,7 +1,7 @@
 # personal-site
 
 个人站点：博客 + 学习记录 + 标签 + 站内搜索 + RSS + 预留的 Agent 接口。
-技术栈：**Astro（纯静态）+ Markdown**，托管在 **Cloudflare Pages**（免费，免服务器）。
+技术栈：**Astro（纯静态构建）+ Markdown**，部署在 **Cloudflare Workers（Static Assets）**，免费、免服务器。
 
 ```
 npm install
@@ -15,7 +15,7 @@ npm run dev        # http://localhost:4321
 ```ts
 export const SITE = {
   name: 'pinkallspace',
-  domain: 'https://pinkallspace.pages.dev',   // 买了域名后改成 https://你的域名
+  domain: 'https://pinkallspace.pages.dev',   // ← 实际的 *.workers.dev 地址，见下方"部署"
   author: 'pinkallspace',
   email: 'pinkall_megumi@example.com',        // TODO 换成常用邮箱
   github: 'https://github.com/Pinkall-MEGUMI',
@@ -68,44 +68,63 @@ tags: [建站, Astro]
 | RSS 订阅 | `/rss.xml` |
 | Sitemap | `/sitemap-index.xml` |
 | robots.txt（自动带 sitemap 地址） | `/robots.txt` |
-| 404 页 | `public/404.html` |
+| 404 页 | `dist/404.html` |
 | 暗色/亮色主题（记忆选择） | 右上角 ◐ |
 | 阅读时长 + 上一篇/下一篇 | 文章页底部 |
-| Agent 页面与接口 | `/chat/` + `/api/chat` |
+| Agent 页面与接口 | `/chat/` + `POST /api/chat` |
 
-## 上线（Cloudflare Pages，免费）
+## 部署（Cloudflare Workers + Static Assets）
 
-1. 推到 GitHub：
+### 架构：一个 Worker 同时管两件事
 
-```bash
-git init
-git add -A
-git commit -m "init"
-git branch -M main
-git remote add origin https://github.com/你的用户名/personal-site.git
-git push -u origin main
+`worker/index.ts` 是唯一入口：
+
+| 请求 | 处理 |
+|---|---|
+| `POST /api/chat` | 走模型接口，Key 从环境变量读 |
+| 其他所有路径 | 交给静态资源（Astro 产出的 `dist/`） |
+
+`wrangler.jsonc` 把两者接起来：
+
+```jsonc
+{
+  "name": "pinkallspace",
+  "main": "worker/index.ts",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "not_found_handling": "404-page" }
+}
 ```
 
-2. Cloudflare 控制台 → Workers & Pages → Create → Pages → Connect to Git → 选仓库
-   （**项目名填 `pinkallspace`**，这样地址就是 `pinkallspace.pages.dev`，和 `src/config.ts` 里的 `domain` 一致）
-3. 构建设置：
+### 首次部署（Git 集成，控制台操作）
 
-| 项 | 值 |
+1. Cloudflare 控制台 → **Workers & Pages** → **Create application** → **Connect to Git**
+2. 授权 GitHub，仓库选 `Pinkall-MEGUMI/personal-site`
+3. 表单填：
+
+| 字段 | 值 |
 |---|---|
-| Framework preset | **Astro** |
+| Project name | `pinkallspace` ← 必须与 `wrangler.jsonc` 的 `name` 一致 |
 | Build command | `npm run build` |
-| Build output directory | `dist` |
+| Deploy command | `npx wrangler deploy`（默认值，不用改） |
+| Preview command | `npx wrangler preview`（保留默认即可） |
+| Root directory | 留空 |
+| 环境变量 | 首次不加 |
 
-4. Deploy。几十秒后得到 `https://xxx.pages.dev`
-5. 绑自己的域名：Pages 项目 → Custom domains → 输入域名 → 按提示配 DNS
+4. 点 **Deploy**。构建日志依次是：安装依赖 → `npm run build` → 18 页 → `wrangler deploy` → 上传 44 个静态文件 + Worker
+5. 拿到网址：`https://pinkallspace.<你的子域>.workers.dev`
 
-之后每次 `git push` 自动重新部署。`functions/` 目录会被自动识别成服务端接口。
+### 之后每次更新
+
+```bash
+git add -A
+git commit -m "新增：xxx"
+git push
+```
+
+Cloudflare 自动重新构建部署，1~2 分钟生效。
 
 ## Agent 怎么接上（第二阶段）
 
-`functions/api/chat.ts` 已经写好，是 `POST /api/chat`。Key 只在服务端，前端拿不到。
-
-1. Pages 项目 → Settings → Variables and Secrets，添加（类型选 **Secret**）：
+接口已经写好，`POST /api/chat`，Key 只在服务端。打开：Workers & Pages → `pinkallspace` → **Settings** → **Variables and Secrets**，添加（类型选 **Secret**）：
 
 | 变量 | 说明 |
 |---|---|
@@ -113,19 +132,18 @@ git push -u origin main
 | `OPENAI_BASE_URL` | 可选，如 `https://api.deepseek.com/v1` |
 | `OPENAI_MODEL` | 可选，如 `deepseek-chat` |
 
-2. 重新部署一次，打开 `/chat/` 就能对话。
+保存后 **必须重新部署一次**（Settings 里点 Deploy 或 push 一次空提交），然后打开 `/chat/` 就能对话。
 
-本地调试接口：
+本地调试（会起本地 Worker 运行时，静态资源 + 接口都能测）：
 
 ```bash
 npm run build
-npm run agent:dev      # npx wrangler pages dev dist
+npm run agent:dev      # wrangler dev
 ```
 
-以后要加"记忆"和"知识库"：D1 存对话（建表 SQL 见 `db/schema.sql`），Vectorize 做 RAG，KV 做限流。
-全部还是同一个项目、同一个平台，不用买服务器。
+以后加"记忆"和"知识库"：D1 存对话（建表 SQL 见 `db/schema.sql`），Vectorize 做 RAG，KV 做限流。全部同一个 Worker，不用买服务器。
 
-**安全底线**：Key 只放 Cloudflare 环境变量里，永远不要写进前端代码或提交到仓库。
+**安全底线**：Key 只放 Cloudflare 的 Secret 里，永远不要写进前端代码或提交到仓库。
 
 ## 目录结构
 
@@ -142,13 +160,14 @@ personal-site/
 │  │  ├─ robots.txt.ts       robots
 │  │  ├─ search.json.ts      搜索索引
 │  │  ├─ tags/               标签聚合 + [tag] 动态页
-│  │  ├─ blog/               博客：*.md + index
-│  │  └─ notes/              学习记录：*.md + index
+│  │  ├─ blog/               博客：*.md + index + _template
+│  │  └─ notes/              学习记录：*.md + index + _template
 │  ├─ components/PostList.astro   文章列表组件
 │  ├─ layouts/               Base（全站外壳）/ Post（文章页）
 │  ├─ lib/posts.ts           文章收集、标签、搜索索引、阅读时长
 │  └─ styles/global.css      全站样式（含暗色主题、响应式）
-├─ functions/api/chat.ts     Agent 接口（Key 在这里）
+├─ worker/index.ts           Worker 入口：/api/chat + 静态资源分发
+├─ wrangler.jsonc            Worker 名、静态资源目录、404 策略
 ├─ db/schema.sql             D1 建表 SQL（第二阶段用）
 ├─ public/                   favicon、404.html
 ├─ astro.config.ts           读 config.ts 里的域名 + sitemap
@@ -160,9 +179,10 @@ personal-site/
 | 命令 | 作用 |
 |---|---|
 | `npm run dev` | 本地开发，热更新，`localhost:4321` |
-| `npm run build` | 构建到 `dist/` |
-| `npm run preview` | 本地预览构建产物 |
-| `npm run agent:dev` | 本地跑带接口的完整环境（wrangler） |
+| `npm run build` | 构建静态产物到 `dist/` |
+| `npm run preview` | 本地预览构建产物（不含接口） |
+| `npm run agent:dev` | 本地跑完整 Worker（静态资源 + /api/chat） |
+| `npm run deploy` | 手动部署（一般用不到，push 会自动部署） |
 
 ## 还没做（按需再加）
 

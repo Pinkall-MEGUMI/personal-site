@@ -7,11 +7,15 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "agent:dev": "npx wrangler pages dev dist --compatibility-date=2024-11-01"
+    "deploy": "wrangler deploy",
+    "agent:dev": "wrangler dev"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.5",
     "astro": "^5.13.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.163.0"
   }
 }
