@@ -1,0 +1,116 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="搜索" description="搜索站内全部内容">
+  <h1>搜索</h1>
+  <p class="post-desc">纯前端搜索，不依赖任何外部服务，不会把你的输入发到别处。</p>
+
+  <div class="search-wrap">
+    <input
+      id="q"
+      type="search"
+      class="search-input"
+      placeholder="输入关键词，如：Git / 建站 / Astro"
+      autocomplete="off"
+    />
+    <div id="hint" class="search-hint">正在加载索引…</div>
+    <ul id="results" class="post-list search-results"></ul>
+  </div>
+
+  <script>
+    interface Item {
+      url: string;
+      title: string;
+      description: string;
+      section: string;
+      date: string;
+      tags: string[];
+      text: string;
+    }
+
+    const input = document.getElementById('q') as HTMLInputElement;
+    const hint = document.getElementById('hint') as HTMLDivElement;
+    const results = document.getElementById('results') as HTMLUListElement;
+    const sectionName = (s: string) => (s === 'notes' ? '学习记录' : '博客');
+
+    let index: Item[] = [];
+
+    fetch('/search.json')
+      .then((r) => r.json())
+      .then((data: Item[]) => {
+        index = data;
+        hint.textContent = `已收录 ${index.length} 篇，输入关键词开始搜索。`;
+
+        const initial = new URLSearchParams(location.search).get('q');
+        if (initial) {
+          input.value = initial;
+          run(initial);
+        }
+      })
+      .catch(() => {
+        hint.textContent = '索引加载失败，请刷新重试。';
+      });
+
+    function highlight(text: string, kw: string): string {
+      if (!kw) return escapeHtml(text);
+      const i = text.toLowerCase().indexOf(kw.toLowerCase());
+      if (i < 0) return escapeHtml(text);
+      const start = Math.max(0, i - 40);
+      const snippet = (start > 0 ? '…' : '') + text.slice(start, start + 140);
+      return escapeHtml(snippet).replace(
+        new RegExp(escapeRegExp(kw), 'gi'),
+        (m) => `<mark>${m}</mark>`
+      );
+    }
+
+    function escapeHtml(s: string): string {
+      return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+    }
+
+    function escapeRegExp(s: string): string {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function run(raw: string) {
+      const kw = raw.trim();
+      history.replaceState(null, '', kw ? `?q=${encodeURIComponent(kw)}` : location.pathname);
+      if (!kw) {
+        results.innerHTML = '';
+        hint.textContent = `已收录 ${index.length} 篇，输入关键词开始搜索。`;
+        return;
+      }
+      const lower = kw.toLowerCase();
+      const hits = index
+        .map((item) => {
+          const titleHit = item.title.toLowerCase().includes(lower) ? 3 : 0;
+          const tagHit = item.tags.join(' ').toLowerCase().includes(lower) ? 2 : 0;
+          const textHit = item.text.toLowerCase().includes(lower) ? 1 : 0;
+          return { item, score: titleHit + tagHit + textHit };
+        })
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score || (a.item.date < b.item.date ? 1 : -1));
+
+      hint.textContent = hits.length ? `找到 ${hits.length} 条结果` : `没有找到「${kw}」相关内容`;
+      results.innerHTML = hits
+        .map(
+          ({ item }) => `
+          <li>
+            <div class="post-meta">
+              <span class="section-tag">${sectionName(item.section)}</span>
+              <span>${item.date}</span>
+            </div>
+            <a class="post-title" href="${item.url}">${escapeHtml(item.title)}</a>
+            <p class="post-desc">${highlight(item.text, kw)}</p>
+          </li>`
+        )
+        .join('');
+    }
+
+    let timer: number | undefined;
+    input.addEventListener('input', () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => run(input.value), 120);
+    });
+  </script>
+</Base>

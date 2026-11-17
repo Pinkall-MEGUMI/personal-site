@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts } from '../../lib/posts';
+
+const notes = getPosts('notes');
+---
+
+<Base title="学习记录" description="学习笔记与进度记录">
+  <h1>学习记录</h1>
+  <p class="post-desc">按时间倒序的笔记流：学了什么、卡在哪、下次怎么改，共 {notes.length} 篇。</p>
+  <div style="margin-top:1.5rem">
+    <PostList posts={notes} empty="暂无笔记。" />
+  </div>
+</Base>

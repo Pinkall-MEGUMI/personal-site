@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getTags } from '../../lib/posts';
+
+const tags = getTags();
+---
+
+<Base title="标签" description="按标签浏览全部内容">
+  <h1>标签</h1>
+  <p class="post-desc">共 {tags.length} 个标签。</p>
+  <div class="tag-cloud" style="margin-top:1.5rem">
+    {
+      tags.map((t) => (
+        <a class="tag-chip" href={`/tags/${t.slug}/`}>
+          {t.tag}
+          <span class="tag-count">{t.count}</span>
+        </a>
+      ))
+    }
+  </div>
+</Base>

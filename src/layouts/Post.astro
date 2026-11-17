@@ -1,0 +1,61 @@
+---
+import Base from './Base.astro';
+import { getPosts, toISODate, tagSlug } from '../lib/posts';
+import type { Section } from '../lib/posts';
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description?: string;
+    date?: string | Date;
+    tags?: string[];
+  };
+}
+
+const { frontmatter } = Astro.props;
+const path = Astro.url.pathname;
+const section: Section = path.startsWith('/notes/') ? 'notes' : 'blog';
+const list = getPosts(section);
+const index = list.findIndex((p) => p.url === path);
+const current = index >= 0 ? list[index] : null;
+const newer = index > 0 ? list[index - 1] : null;
+const older = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
+
+const tags = frontmatter.tags ?? [];
+const dateText = toISODate(frontmatter.date);
+const listName = section === 'notes' ? '学习记录' : '博客';
+---
+
+<Base title={`${frontmatter.title} · ${listName}`} description={frontmatter.description}>
+  <article>
+    <header class="post-header">
+      <a class="back" href={`/${section}/`}>← 返回{listName}</a>
+      <h1>{frontmatter.title}</h1>
+      <div class="post-meta">
+        <span>{dateText}</span>
+        {current && <span> · {current.minutes} 分钟</span>}
+        {tags.map((t) => <a class="tag" href={`/tags/${tagSlug(t)}/`}>#{t}</a>)}
+      </div>
+    </header>
+    <slot />
+  </article>
+
+  {
+    (newer || older) && (
+      <nav class="pager">
+        {newer && (
+          <a class="pager-item" href={newer.url}>
+            <span class="pager-label">← 更新一篇</span>
+            <span class="pager-title">{newer.title}</span>
+          </a>
+        )}
+        {older && (
+          <a class="pager-item pager-right" href={older.url}>
+            <span class="pager-label">更早一篇 →</span>
+            <span class="pager-title">{older.title}</span>
+          </a>
+        )}
+      </nav>
+    )
+  }
+</Base>

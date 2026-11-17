@@ -1,0 +1,84 @@
+---
+import '../styles/global.css';
+import { SITE } from '../config';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = SITE.description } = Astro.props;
+const year = new Date().getFullYear();
+const path = Astro.url.pathname;
+const canonical = new URL(path, SITE.domain).href;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={SITE.name} href="/rss.xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="generator" content={Astro.generator} />
+    <script is:inline>
+      // 在首屏渲染前套用主题，避免闪白
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="/">{SITE.name}</a>
+        <nav class="site-nav">
+          {
+            SITE.nav.map((item) => (
+              <a
+                href={item.href}
+                class:list={{ active: path === item.href || path.startsWith(item.href) }}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+        <button class="theme-toggle" id="theme-toggle" aria-label="切换主题">◐</button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        © {year} {SITE.author} · Build with Astro · Hosted on Cloudflare Pages ·
+        <a href="/rss.xml">RSS</a>
+      </div>
+    </footer>
+
+    <script is:inline>
+      document.getElementById('theme-toggle')?.addEventListener('click', function () {
+        var el = document.documentElement;
+        var next = el.dataset.theme === 'dark' ? 'light' : 'dark';
+        el.dataset.theme = next;
+        try {
+          localStorage.setItem('theme', next);
+        } catch (e) {}
+      });
+    </script>
+  </body>
+</html>

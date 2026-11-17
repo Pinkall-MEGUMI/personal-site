@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getAllPosts, getTags, getPostsByTagSlug } from '../../lib/posts';
+
+export function getStaticPaths() {
+  return getTags().map((t) => ({
+    params: { tag: t.slug },
+    props: { tag: t.tag, count: t.count },
+  }));
+}
+
+const { tag, count } = Astro.props;
+const posts = getPostsByTagSlug(Astro.params.tag as string)
+  .slice()
+  .sort((a, b) => (a.date < b.date ? 1 : -1));
+---
+
+<Base title={`标签：${tag}`} description={`带有「${tag}」标签的全部内容`}>
+  <p class="back"><a href="/tags/">← 全部标签</a></p>
+  <h1>#{tag}</h1>
+  <p class="post-desc">
+    共 {count} 篇（博客 {posts.filter((p) => p.section === 'blog').length} · 学习记录{' '}
+    {posts.filter((p) => p.section === 'notes').length}）
+  </p>
+  <div style="margin-top:1.5rem">
+    <PostList posts={posts} showSection={true} empty="这个标签下还没有内容。" />
+  </div>
+</Base>

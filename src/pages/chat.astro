@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Agent · 你的名字" description="我自己的 AI Agent">
+  <h1>我的 Agent</h1>
+  <p class="post-desc">
+    这一页现在是占位页。等你在 Cloudflare 配好 API Key，就可以直接调 <code>/api/chat</code>。
+  </p>
+
+  <div style="margin:2rem 0">
+    <label for="q" style="font-size:.875rem;color:var(--fg-soft)">问点什么：</label>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem">
+      <input
+        id="q"
+        type="text"
+        placeholder="例如：帮我总结一下我的学习笔记"
+        style="flex:1;padding:.6rem .8rem;border:1px solid var(--line);border-radius:8px;background:var(--bg-soft);color:var(--fg)"
+      />
+      <button
+        id="send"
+        style="padding:.6rem 1rem;border:1px solid var(--line);border-radius:8px;background:var(--accent);color:#fff;cursor:pointer"
+        >发送</button
+      >
+    </div>
+    <pre id="out" style="margin-top:1rem;min-height:6rem;white-space:pre-wrap">（回答会出现在这里）</pre>
+  </div>
+
+  <script>
+    const input = document.getElementById('q') as HTMLInputElement;
+    const out = document.getElementById('out') as HTMLPreElement;
+    const btn = document.getElementById('send') as HTMLButtonElement;
+
+    async function send() {
+      const q = input.value.trim();
+      if (!q) return;
+      out.textContent = '思考中…';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: q }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        out.textContent = data.reply ?? JSON.stringify(data, null, 2);
+      } catch (e) {
+        out.textContent =
+          `调用失败：${(e as Error).message}\n\n` +
+          '本地开发时接口不存在是正常的——functions/ 目录需要 wrangler 才会生效；\n' +
+          '线上要先在 Cloudflare 控制台设置环境变量（如 OPENAI_API_KEY）。';
+      }
+    }
+
+    btn.addEventListener('click', send);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send();
+    });
+  </script>
+</Base>

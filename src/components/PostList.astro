@@ -1,0 +1,37 @@
+---
+import { tagSlug } from '../lib/posts';
+import type { PostMeta } from '../lib/posts';
+
+interface Props {
+  posts: PostMeta[];
+  empty?: string;
+  showSection?: boolean;
+}
+
+const { posts, empty = '还没有内容。', showSection = false } = Astro.props;
+const sectionName = (s: string) => (s === 'notes' ? '学习记录' : '博客');
+---
+
+<ul class="post-list">
+  {
+    posts.map((p) => (
+      <li>
+        <div class="post-meta">
+          {showSection && <span class="section-tag">{sectionName(p.section)}</span>}
+          <span>{p.date}</span>
+          <span>· {p.minutes} 分钟</span>
+          {p.tags.map((t) => (
+            <a class="tag" href={`/tags/${tagSlug(t)}/`}>
+              #{t}
+            </a>
+          ))}
+        </div>
+        <a class="post-title" href={p.url}>
+          {p.title}
+        </a>
+        {p.description && <p class="post-desc">{p.description}</p>}
+      </li>
+    ))
+  }
+  {posts.length === 0 && <li class="empty">{empty}</li>}
+</ul>

@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import PostList from '../components/PostList.astro';
+import { SITE } from '../config';
+import { getPosts, getTags } from '../lib/posts';
+
+const posts = getPosts('blog').slice(0, 5);
+const notes = getPosts('notes').slice(0, 5);
+const tags = getTags().slice(0, 12);
+---
+
+<Base title={SITE.title} description={SITE.description}>
+  <section class="hero">
+    <h1>你好，我是 {SITE.author}</h1>
+    <p class="lead">
+      这里是我的个人站点：写博客、记学习笔记，以及放一个我自己的 Agent。
+      所有内容都用 Markdown 写，<code>git push</code> 即上线。
+    </p>
+    <div class="pill-row">
+      <span class="pill">Astro</span>
+      <span class="pill">Markdown</span>
+      <span class="pill">Cloudflare Pages</span>
+      <span class="pill">Agent 预留</span>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <h2>最新博客</h2>
+    <a class="more" href="/blog/">全部 →</a>
+  </div>
+  <PostList posts={posts} empty="还没有文章，去 src/pages/blog/ 新建一个 .md。" />
+
+  <div class="section-head">
+    <h2>学习记录</h2>
+    <a class="more" href="/notes/">全部 →</a>
+  </div>
+  <PostList posts={notes} empty="还没有笔记，去 src/pages/notes/ 新建一个 .md。" />
+
+  {
+    tags.length > 0 && (
+      <>
+        <div class="section-head">
+          <h2>标签</h2>
+          <a class="more" href="/tags/">全部 →</a>
+        </div>
+        <div class="tag-cloud">
+          {tags.map((t) => (
+            <a class="tag-chip" href={`/tags/${t.slug}/`}>
+              {t.tag}
+              <span class="tag-count">{t.count}</span>
+            </a>
+          ))}
+        </div>
+      </>
+    )
+  }
+</Base>

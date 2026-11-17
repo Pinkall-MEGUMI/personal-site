@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../config';
+---
+
+<Base title="关于" description={SITE.description}>
+  <h1>关于</h1>
+  <p>
+    这里写一段自我介绍：你是谁、在做什么、想找什么样的机会。面试官或合作方打开你的站点，
+    第一眼看的就是这一页。
+  </p>
+
+  <h2>我在做什么</h2>
+  <ul>
+    <li>正在学：<code>Web 前端</code>、<code>AI Agent</code></li>
+    <li>技术栈：Java / Python / 数据库 / 一点前端</li>
+    <li>项目：见<a href="/blog/">博客</a>里的项目记录</li>
+  </ul>
+
+  <h2>这个站点</h2>
+  <p>
+    Astro 静态生成，Markdown 写作，托管在 Cloudflare Pages。源码在
+    <a href={SITE.github} rel="noopener">GitHub</a>，订阅走 <a href="/rss.xml">RSS</a>。
+  </p>
+
+  <h2>联系我</h2>
+  <ul>
+    <li>GitHub：<a href={SITE.github} rel="noopener">{SITE.github}</a></li>
+    <li>Email：<a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+  </ul>
+</Base>

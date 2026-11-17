@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts } from '../../lib/posts';
+
+const posts = getPosts('blog');
+---
+
+<Base title="博客" description="全部博客文章">
+  <h1>博客</h1>
+  <p class="post-desc">长期文章、复盘、项目记录，共 {posts.length} 篇。</p>
+  <div style="margin-top:1.5rem">
+    <PostList posts={posts} empty="暂无文章。" />
+  </div>
+</Base>
