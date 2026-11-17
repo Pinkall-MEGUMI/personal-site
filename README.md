@@ -183,6 +183,21 @@ personal-site/
 | `npm run preview` | 本地预览构建产物（不含接口） |
 | `npm run agent:dev` | 本地跑完整 Worker（静态资源 + /api/chat） |
 | `npm run deploy` | 手动部署（一般用不到，push 会自动部署） |
+| `npm run verify` | **上线后自检**：路由、canonical、RSS、robots、sitemap、接口、404 |
+
+## 上线后自检
+
+每次改完配置或大改内容，推完等 1~2 分钟后跑一次：
+
+```bash
+npm run verify
+```
+
+它会逐项检查线上的真实状态（`全部通过 ✅` / `N 项失败 ❌`），比肉眼点页面可靠。
+换检查目标：`SITE_URL=http://localhost:4321 npm run verify`（本地也能用）。
+
+> 首次部署后记得去 **SSL/TLS → Edge Certificates → Always Use HTTPS** 打开，
+> 否则 `http://` 访问不会自动跳到 `https://`，`npm run verify` 会提示这一项失败。
 
 ## 还没做（按需再加）
 
