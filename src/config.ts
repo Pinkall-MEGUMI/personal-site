@@ -10,10 +10,9 @@ export const SITE = {
 
   /**
    * 站点地址：sitemap、RSS 绝对链接、页面 canonical 都依赖它。
-   * 现在填的是 Cloudflare Pages 部署后的默认地址（项目名要建成 pinkallspace）。
    * TODO: 买到自己的域名后，把这一行改成 https://你的域名
    */
-  domain: 'https://pinkallspace.pages.dev',
+  domain: 'https://pinkallspace.3182095656.workers.dev',
 
   author: 'pinkallspace',
   /** TODO: 换成你常用的邮箱，会显示在「关于」页 */
