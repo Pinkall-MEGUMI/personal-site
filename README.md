@@ -15,7 +15,7 @@ npm run dev        # http://localhost:4321
 ```ts
 export const SITE = {
   name: 'pinkallspace',
-  domain: 'https://pinkallspace.pages.dev',   // ← 实际的 *.workers.dev 地址，见下方"部署"
+  domain: 'https://pinkallspace.com',        // ← 自定义域名，DNS 托管在 Cloudflare
   author: 'pinkallspace',
   email: 'pinkall_megumi@example.com',        // TODO 换成常用邮箱
   github: 'https://github.com/Pinkall-MEGUMI',

@@ -10,9 +10,9 @@ export const SITE = {
 
   /**
    * 站点地址：sitemap、RSS 绝对链接、页面 canonical 都依赖它。
-   * TODO: 买到自己的域名后，把这一行改成 https://你的域名
+   * 已绑定自定义域名 pinkallspace.com（阿里云注册，DNS 托管在 Cloudflare）。
    */
-  domain: 'https://pinkallspace.3182095656.workers.dev',
+  domain: 'https://pinkallspace.com',
 
   author: 'pinkallspace',
   /** TODO: 换成你常用的邮箱，会显示在「关于」页 */
