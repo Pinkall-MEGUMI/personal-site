@@ -10,6 +10,7 @@ const PATHS = [
   '/', '/blog/', '/notes/', '/tags/', '/search/', '/about/', '/chat/',
   '/rss.xml', '/sitemap-index.xml', '/robots.txt', '/search.json',
   '/tags/agent/', '/blog/from-jd-to-6-tools/', '/tags/langgraph/',
+  '/blog/website-security-for-beginners/', '/tags/安全/',
   '/.well-known/security.txt',
 ];
 
