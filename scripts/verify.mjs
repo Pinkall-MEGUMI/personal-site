@@ -10,6 +10,7 @@ const PATHS = [
   '/', '/blog/', '/notes/', '/tags/', '/search/', '/about/', '/chat/',
   '/rss.xml', '/sitemap-index.xml', '/robots.txt', '/search.json',
   '/tags/agent/', '/blog/from-jd-to-6-tools/', '/tags/langgraph/',
+  '/.well-known/security.txt',
 ];
 
 let failed = 0;
@@ -88,6 +89,37 @@ try {
   else fail(`404 页异常 — ${r.status}`);
 } catch (e) {
   fail(`404 检查失败 — ${e.message}`);
+}
+
+console.log('\n安全响应头');
+try {
+  const r = await fetch(BASE + '/');
+  const need = {
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'DENY',
+    'referrer-policy': 'strict-origin-when-cross-origin',
+    'strict-transport-security': null,
+    'content-security-policy': null,
+    'cross-origin-opener-policy': 'same-origin',
+  };
+  for (const [name, expected] of Object.entries(need)) {
+    const got = r.headers.get(name);
+    if (got && (expected === null || got.toLowerCase().includes(expected.toLowerCase()))) ok(`${name}: ${got.slice(0, 60)}`);
+    else fail(`${name} 缺失或不正确 — ${got ?? 'null'}`);
+  }
+  await r.arrayBuffer();
+
+  const api = await fetch(BASE + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  if (api.headers.get('x-content-type-options') === 'nosniff') ok('接口响应带 nosniff');
+  else fail('接口响应缺少 nosniff');
+  await api.arrayBuffer();
+
+  const hdrFile = await fetch(BASE + '/_headers');
+  if (hdrFile.status === 404) ok('_headers 文件本身不对外暴露');
+  else fail(`_headers 被当作静态文件返回了（${hdrFile.status}）`);
+  await hdrFile.arrayBuffer();
+} catch (e) {
+  fail(`安全头检查异常 — ${e.message}`);
 }
 
 console.log(`\n${failed === 0 ? '全部通过 ✅' : `${failed} 项失败 ❌`}`);

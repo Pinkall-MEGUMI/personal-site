@@ -199,6 +199,38 @@ npm run verify
 > 首次部署后记得去 **SSL/TLS → Edge Certificates → Always Use HTTPS** 打开，
 > 否则 `http://` 访问不会自动跳到 `https://`，`npm run verify` 会提示这一项失败。
 
+## 安全与防爬虫（全部免费）
+
+### 已在代码里自动生效
+
+| 措施 | 位置 | 作用 |
+|---|---|---|
+| 安全响应头（CSP / HSTS / X-Frame-Options / nosniff / Referrer-Policy / COOP·CORP / Permissions-Policy） | `public/_headers` | 防点击劫持、防 MIME 嗅探、限制外部资源加载 |
+| 静态资源不可变缓存 | `public/_headers`（`/_astro/*`） | 性能 + 减少重复抓取 |
+| 接口响应头 + `no-store` | `worker/index.ts` | 接口不被缓存、不被当 HTML 解析 |
+| 强制 HTTPS | Zone 设置 `Always Use HTTPS` + Worker 兜底 | 明文请求 301 |
+| `security.txt` | `public/.well-known/security.txt` | 漏洞报告渠道 |
+| Agents 密钥只存服务端 | Cloudflare Secret | 永不出现在前端 |
+| 无任何第三方脚本 / 字体 / 统计 | 全局 | 没有供应链注入口 |
+
+### 需要你在控制台点（一次性，2 分钟）
+
+| 开关 | 位置 | 建议 |
+|---|---|---|
+| **Bot Fight Mode** | Security → Bots | 开（若发现 RSS 阅读器被拦再关） |
+| **Email Address Obfuscation** | Scrape Shield | **开**（把页面里的邮箱转成乱码，防爬） |
+| **Security Level** | Security → Settings | Medium 或 High |
+| **Rate limiting rule** | Security → WAF → Rate limiting | 对 `/api/chat`：10 次/分钟/IP（Agent 上线后再开） |
+| **Block AI bots**（可选） | Security → Bots | 不想被 AI 抓取就开 |
+| **2FA** | 账号设置 | GitHub 和 Cloudflare 都开 —— **真正的"防黑"第一道** |
+
+### 依赖审计
+
+`npm audit` 目前剩 12 条（1 critical / 10 high / 1 low），全部在**构建期依赖链**（astro / vite / esbuild / sharp / zod），
+且**在纯静态站里不可达**：本仓库不用图片优化、不渲染用户输入、不跑 SSR。
+
+彻底消除需要把 Astro 5 升到 7（大版本、有破坏性变更），属于独立任务。
+
 ## 还没做（按需再加）
 
 - 评论（可用 giscus，免费，基于 GitHub Discussions）

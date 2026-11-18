@@ -1,0 +1,4 @@
+Contact: mailto:3182095656@qq.com
+Expires: 2027-12-31T00:00:00.000Z
+Preferred-Languages: zh, en
+Canonical: https://pinkallspace.com/.well-known/security.txt
