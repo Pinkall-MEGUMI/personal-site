@@ -9,7 +9,7 @@ const BASE = process.env.SITE_URL ?? 'https://pinkallspace.com';
 const PATHS = [
   '/', '/blog/', '/notes/', '/tags/', '/search/', '/about/', '/chat/',
   '/rss.xml', '/sitemap-index.xml', '/robots.txt', '/search.json',
-  '/tags/建站/', '/blog/hello-site/',
+  '/tags/建站/', '/blog/from-jd-to-6-tools/', '/tags/Agent/',
 ];
 
 let failed = 0;

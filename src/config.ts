@@ -15,8 +15,7 @@ export const SITE = {
   domain: 'https://pinkallspace.com',
 
   author: 'pinkallspace',
-  /** TODO: 换成你常用的邮箱，会显示在「关于」页 */
-  email: 'pinkall_megumi@example.com',
+  email: '3182095656@qq.com',
   github: 'https://github.com/Pinkall-MEGUMI',
 
   nav: [

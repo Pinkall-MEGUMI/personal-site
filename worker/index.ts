@@ -23,6 +23,12 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
+    // 强制 HTTPS：http 请求一律 301 到 https（不依赖控制台开关，永远生效）
+    if (url.protocol === 'http:') {
+      url.protocol = 'https:';
+      return Response.redirect(url.toString(), 301);
+    }
+
     if (url.pathname === '/api/chat') {
       if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
       if (request.method !== 'POST') return json({ error: '只支持 POST' }, 405);
