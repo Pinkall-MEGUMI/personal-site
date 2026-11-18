@@ -23,10 +23,13 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // 强制 HTTPS：http 请求一律 301 到 https（不依赖控制台开关，永远生效）
-    if (url.protocol === 'http:') {
-      url.protocol = 'https:';
-      return Response.redirect(url.toString(), 301);
+    // 强制 HTTPS：http 请求一律 301 到 https。
+    // Cloudflare 可能把 request.url 统一成 https，所以同时看 X-Forwarded-Proto。
+    const proto = (request.headers.get('x-forwarded-proto') ?? url.protocol.replace(':', '')).toLowerCase();
+    if (proto === 'http') {
+      const secure = new URL(url.toString());
+      secure.protocol = 'https:';
+      return Response.redirect(secure.toString(), 301);
     }
 
     if (url.pathname === '/api/chat') {
